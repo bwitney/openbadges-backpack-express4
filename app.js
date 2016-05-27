@@ -7,6 +7,7 @@ if ( process.env.NEW_RELIC_HOME ) {
 // Configure & start express.
 var express = require('express');
 var http = require('http');
+var errorhandler = require('errorhandler');
 var fs = require('fs');
 var path = require('path');
 var middleware = require('./middleware');
@@ -21,7 +22,8 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var methodOverride = require('method-override');//todo: add module via npm
 var cookieSessions = require('cookie-session');//todo: add module via npm
-var serveStatic = require('serve-static')
+var serveStatic = require('serve-static');
+
 // ? express.static is it included?
 var morgan = require('morgan');
 
@@ -32,13 +34,17 @@ app.logger = logger;
 app.config = configuration;
 
 /* Default values for template variables */
+app.locals.error=[];
+app.locals.success=[];
+app.locals.getBrowserIdScriptUrl=function() {
+  return browserid.getIncludeScriptUrl();}
+
 //app.locals({
 //  error: [],
 //  success: [],
-
- // getBrowserIdScriptUrl: function() {
- //   return browserid.getIncludeScriptUrl();
- // }
+//  getBrowserIdScriptUrl: function() {
+//    return browserid.getIncludeScriptUrl();
+//  }
 //});
 /* Lets try Express 4 methods for app.local*/
 
@@ -78,7 +84,11 @@ app.use(bodyParser.json()); //http://stackoverflow.com/questions/24330014/bodypa
 app.use(cookieParser());
 app.use(methodOverride());
 app.use(middleware.logRequests());
-app.use(cookieSessions());
+//app.use(cookieSessions());//todo define session keys below see https://github.com/expressjs/cookie-session?_ga=1.210997781.1877722367.1464359765
+app.use(cookieSessions({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
 app.use(middleware.userFromSession());
 app.use(flash());
 app.use(middleware.csrf({
@@ -91,20 +101,21 @@ app.use(middleware.csrf({
 }));
 app.use(middleware.cors({ whitelist: ['/_badges.*', '/issuer.*', '/baker', '/displayer/.+/group.*'] }));
 app.use(middleware.statsdRequests());
-app.use(app.router);
+//app.use(app.router);//todo this is deprecated in Express4
+
 app.use(middleware.notFound());
-app.configure('development', function () {
-  var gitUtil = require('./lib/git-util');
-  try {
-    var sha = gitUtil.findSHA();
-    app.set('sha', sha);
-  }
-  catch (ex) {
-    logger.warn(ex);
-  }
-  browserid.configure({testUser: process.env['BROWSERID_TEST_USER']});
-});
-app.use(express.errorHandler());
+///app.configure('development', function () {
+///  var gitUtil = require('./lib/git-util');
+///  try {
+///    var sha = gitUtil.findSHA();
+///    app.set('sha', sha);
+///  }
+///  catch (ex) {
+///    logger.warn(ex);
+///  }
+///  browserid.configure({testUser: process.env['BROWSERID_TEST_USER']});
+///});
+app.use(errorhandler());
 
 
 // Routes
@@ -131,7 +142,9 @@ app.param('groupId', group.findById);
 app.param('groupUrl', share.findGroupByUrl);
 app.param('badgeUrl', badge.findByUrl);
 app.param('badgeHash', badge.findByHash);
-
+//////// NEW ROUTES
+app.get('/', backpack.login);
+//////// OLD ROUTES
 app.get('/baker', baker.baker);
 app.get('/issuer.js', issuer.generateScript);
 app.get('/issuer/frame', issuer.frame);
@@ -190,6 +203,8 @@ app.post('/api/issue', backpackConnect.authorize("issue"),
                        issuer.issuerBadgeAddFromAssertion);
 app.get('/api/identity', backpackConnect.authorize("issue"),
                          backpackConnect.hashIdentity());
+
+// END OLD ROUTES
 
 if (!module.parent) {
   var start_server = function start_server(app) {
