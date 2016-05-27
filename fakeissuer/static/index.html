@@ -1,0 +1,85 @@
+<!doctype html public "wutlol">
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1"/>
+    
+    <title dir="ltr">Yep</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  </head>
+  <body>
+    <form method="post" action="sign">
+      <label>Make signed badge for email <input name="email" placeholder="steve.holt@example.org"></label>
+      <input type="submit" value="Do it">
+    </form>
+
+    <label>Email or Signature: <input id='email'></label>
+    <label>Modaless: <input id='modaless' type='checkbox'></label>
+    <button id="old">Old</button>
+    <button id="unhashed">Unhashed</button>
+    <button id="hashed">Hashed</button>
+    <button id="invalid">Invalid</button>
+    <button id="signature">Signature</button>
+    <script>
+      function qualify(href) {
+        var a = document.createElement('a');
+        a.setAttribute('href', href);
+        return a.href;
+      }
+      
+      
+      var old = document.getElementById('old');
+      var unhashed = document.getElementById('unhashed');
+      var hashed = document.getElementById('hashed');
+      var invalid = document.getElementById('invalid');
+      function getEmail() {
+        return document.getElementById('email').value;
+      }
+      function issue(assertions) {
+        if(document.getElementById('modaless').checked) {
+          OpenBadges.issue_no_modal(assertions);
+        }
+        else {
+          OpenBadges.issue(assertions);
+        }
+      }
+      
+      var attach = function(element, eventName, cb) {
+        if (element.addEventListener)
+          element.addEventListener(eventName, cb, false);
+        else
+          element.attachEvent('on' + eventName, cb);
+      };
+
+      attach(old, 'click', function(){
+        var url = qualify('/old.json?email=') + encodeURIComponent(getEmail());
+        issue(url)
+      });
+      
+      attach(unhashed, 'click', function(){
+        var url = qualify('/raw.json?email=') + encodeURIComponent(getEmail());
+        issue(url)
+      });
+    
+      attach(hashed, 'click', function(){
+        var url = qualify('/hashed.json?email=') + encodeURIComponent(getEmail())
+        issue([url]);
+      });
+
+      // added to test whether proper error message is thrown for invalid assertion 
+      attach(invalid, 'click', function(){
+        var url = qualify('/invalid.json?email=') + encodeURIComponent(getEmail());
+        issue(url);
+      });
+    
+      attach(signature, 'click', function(){
+        var assertion = getEmail();
+        issue(assertion);
+      });
+    
+      document.write('<script src="//' + location.hostname +
+                     ':8888/issuer.js"></' + 'script>');
+    </script>
+  </body>
+</html>

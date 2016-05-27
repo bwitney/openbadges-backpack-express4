@@ -1,0 +1,19 @@
+<div class='group {% if not attributes.id %}isNew{% endif %}'>
+  <input class='groupName' type='text' value='{{name|e}}'>
+  <span class='icon delete'>&times;</span>
+  <span class='icon share' title='share this group'>5</span>
+  
+  {% if not attributes.id %}
+    <hgroup class="instructions">
+      <h3>Drag a badge here</h3>
+      to create a Collection.
+    </hgroup>
+  {% endif %}
+
+  <span class='public'>
+    <label>
+      <input type='checkbox' class='js-privacy' {% if attributes.public %}checked{% endif %}>
+      <span>public</span>
+    </label>
+  </span>
+</div>

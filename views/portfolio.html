@@ -1,0 +1,66 @@
+{% extends 'layout.html' %}
+{% block body %}
+<link rel="stylesheet" href="/css/socialmedia.css">
+
+<div class='portfolio'>
+{% if owner %}
+  <div class="alert alert-info">
+    <div class="socialshare" style="float: left;" tabindex="0" onclick="injectSocialMedia(this)">
+      <span class="msg">Share this on Twitter, Google+, Facebook and LinkedIn</span>
+      <div class="social-medium twitter"></div>
+      <div class="social-medium google"></div>
+      <div class="social-medium facebook"></div>
+      <div class="social-medium linkedin"></div>
+    </div>
+    <a href="edit" class='edit btn btn-primary'>Edit this page</a>
+    <strong class="shareMessage">This is how your portfolio page will look to the public.</strong>
+  </div>
+{% endif %}
+
+  <header>
+    {% if portfolio.attributes.title %}
+      <h1>{{portfolio.attributes.title|e}}</h1>
+    {% endif %}
+    {% if portfolio.attributes.subtitle %}
+      <h2>{{portfolio.attributes.subtitle|e}}</h1>
+    {% endif %}
+  </header>
+
+  <ul class='badges'>
+    {% for badge in portfolio.badges %}
+      <li>
+        <h3>{{badge.attributes.body.badge.name|e}}</h3>
+
+        <p class='story'>{{badge.attributes._userStory|e}}</p>
+
+        {% include 'badge-data.html' %}
+      </li>
+    {% endfor %}
+  </ul>
+
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="/vendor/bootstrap/js/bootstrap-alert.js"></script>
+<script type="text/javascript" src="/js/social-media.js"></script>
+
+<script>
+function injectSocialMedia(container) {
+  // prevent this element from injecting social media again
+  container.onclick = function() { return false; }
+  var socialMedia = new SocialMedia();
+  var url = window.location.toString();
+
+  // inject twitter, g+ and facebook
+  socialMedia.hotLoad(container.querySelector(".twitter"),  socialMedia.twitter,  url);
+  socialMedia.hotLoad(container.querySelector(".google"),   socialMedia.google,   url);
+  socialMedia.hotLoad(container.querySelector(".facebook"), socialMedia.facebook, url);
+  socialMedia.hotLoad(container.querySelector(".linkedin"), socialMedia.linkedin, url);
+
+  // kill off the text label
+  var label = container.querySelector("span");
+  $(label).remove();
+}
+</script>
+{% endblock %}
